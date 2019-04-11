@@ -1,3 +1,6 @@
+#v2.0.2
+* Updated extension.json to support MediaWiki 1.30+.
+
 #v2.0.1
 * Switched over to iframes to support newer browsers.
 
