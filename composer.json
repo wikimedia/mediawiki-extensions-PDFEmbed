@@ -1,5 +1,5 @@
 {
-  "name": "WolfgangFahl/PDFembed",
+  "name": "wolfgangfahl/pdfembed",
   "type": "mediawiki-extension",
   "description": "PDFEmbed allows Adobe Acrobat PDF files to be embedded into a wiki article using tags. The PDF file extension is automatically added and necessarily default permissions are configured. Future functionality will allow this extension to act as a media handler for PDF files.",
   "homepage": "https://www.mediawiki.org/wiki/Extension:PDFEmbed",

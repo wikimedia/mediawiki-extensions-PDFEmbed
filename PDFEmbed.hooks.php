@@ -12,6 +12,7 @@
  **/
 
 use MediaWiki\MediaWikiServices;
+use MediaWiki\User\UserIdentity;
 
 class PDFEmbed
 {
@@ -24,9 +25,9 @@ class PDFEmbed
      *            object Parser object passed as a reference.
      * @return boolean true
      */
-    static public function onParserFirstCallInit(Parser &$parser)
+    static public function onParserFirstCallInit(Parser $parser)
     {
-        $parser->setHook('pdf', 'PDFEmbed::generateTag');
+        $parser->setHook('pdf', [ __CLASS__, 'generateTag' ] );
 
         return true;
     }
@@ -36,7 +37,7 @@ class PDFEmbed
      *
      * @param Parser $parser
      */
-    static public function disableCache(Parser &$parser)
+    static public function disableCache(Parser $parser)
     {
         // see https://gerrit.wikimedia.org/r/plugins/gitiles/mediawiki/extensions/MagicNoCache/+/refs/heads/master/src/MagicNoCacheHooks.php
         global $wgOut;
@@ -94,9 +95,10 @@ class PDFEmbed
      *            object PPFrame object.
      * @return string HTML
      */
-    static public function generateTag($obj, $args = [], ?Parser $parser, ?PPFrame $frame)
+    static public function generateTag($obj, $args, Parser $parser, PPFrame $frame)
     {
         global $wgPdfEmbed, $wgRequest, $wgPDF;
+
         // disable the cache
         PDFEmbed::disableCache($parser);
 
