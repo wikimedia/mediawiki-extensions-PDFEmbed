@@ -15,22 +15,21 @@
 		"MediaWiki": ">= 1.29.0"
 	},
 	"type": "parserhook",
+	"AvailableRights": [
+		"embed_pdf"
+	],
 	"GroupPermissions": {
 		"sysop": {
 			"embed_pdf": true
 		}
 	},
-	"AvailableRights": [
-		"embed_pdf"
-	],
 	"MessagesDirs": {
 		"PDFEmbed": [
 			"i18n"
 		]
 	},
 	"AutoloadClasses": {
-		"PDFEmbed": "PDFEmbed.hooks.php",
-		"PDFHandler": "classes/PDFHandler.class.php"
+		"PDFEmbed": "PDFEmbed.php"
 	},
 	"Hooks": {
 		"ParserFirstCallInit": "PDFEmbed::onParserFirstCallInit"
@@ -45,5 +44,8 @@
 			"iframe": true
 		}
 	},
+	"TrackingCategories": [
+		"pdfembed-permission-problem-category"
+	],
 	"manifest_version": 1
 }
