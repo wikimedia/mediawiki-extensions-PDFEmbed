@@ -33,7 +33,8 @@
 		"test": [
 			"parallel-lint . --exclude vendor --exclude node_modules",
 			"minus-x check .",
-			"@phpcs"
+			"@phpcs",
+			"php \"$MW_INSTALL_PATH/tests/parser/parserTests.php\" --file tests/parser/pdfembed.txt"
 		],
 		"error-format-test": [
 			"phpcs -s --report=emacs --basepath=$PWD . || true",

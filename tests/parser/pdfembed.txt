@@ -11,7 +11,7 @@ Create a file
 !! endarticle
 
 !! test
-Empty element
+PDF element is empty
 !! wikitext
 <pdf></pdf>
 !! html
@@ -20,7 +20,7 @@ Empty element
 !! end
 
 !! test
-Element with garbage
+… has garbage
 !! wikitext
 <pdf><>#!*/</pdf>
 !! html
@@ -29,16 +29,16 @@ Element with garbage
 !! end
 
 !! test
-… with an URL
+… has an URL
 !! wikitext
-<pdf>https://example.com</pdf>
+<pdf>https://example.net</pdf>
 !! html
-<p><iframe class="pdf-embed" width="800" height="1090" src="https://example.com#page=1" style="max-width: 100%;"></iframe>
+<p><iframe class="pdf-embed" width="800" height="1090" src="https://example.net#page=1" style="max-width: 100%;"></iframe>
 </p>
 !! end
 
 !! test
-… with file
+… has a file
 !! wikitext
 <pdf>File.pdf</pdf>
 !! html
@@ -47,7 +47,7 @@ Element with garbage
 !! end
 
 !! test
-… with space before filename
+… has a space before filename
 !! wikitext
 <pdf> File.pdf</pdf>
 !! html
@@ -56,7 +56,7 @@ Element with garbage
 !! end
 
 !! test
-… with space after filename
+… has a space after filename
 !! wikitext
 <pdf>File.pdf</pdf>
 !! html
@@ -65,7 +65,7 @@ Element with garbage
 !! end
 
 !! test
-… with non-existant file
+… has a non-existant file
 !! wikitext
 <pdf>No-Exist-File.pdf</pdf>
 !! html
@@ -74,7 +74,7 @@ Element with garbage
 !! end
 
 !! test
-… with iframe=true
+… has iframe=true
 !! wikitext
 <pdf iframe=true>File.pdf</pdf>
 !! html
@@ -83,7 +83,7 @@ Element with garbage
 !! end
 
 !! test
-… with iframe=false
+… has iframe=false
 !! wikitext
 <pdf iframe=false>File.pdf</pdf>
 !! html
@@ -92,7 +92,7 @@ Element with garbage
 !! end
 
 !! test
-… with iframe=
+… has iframe=
 !! wikitext
 <pdf iframe=>File.pdf</pdf>
 !! html
@@ -101,7 +101,7 @@ Element with garbage
 !! end
 
 !! test
-… with iframe=no
+… has iframe=no
 !! wikitext
 <pdf iframe=no>File.pdf</pdf>
 !! html
@@ -110,7 +110,7 @@ Element with garbage
 !! end
 
 !! test
-… with iframe=yes
+… has iframe=yes
 !! wikitext
 <pdf iframe=yes>File.pdf</pdf>
 !! html
@@ -119,7 +119,7 @@ Element with garbage
 !! end
 
 !! test
-… with iframe=1
+… has iframe=1
 !! wikitext
 <pdf iframe=1>File.pdf</pdf>
 !! html
@@ -128,10 +128,19 @@ Element with garbage
 !! end
 
 !! test
-… with width=10
+… has width=10
 !! wikitext
 <pdf width=10>File.pdf</pdf>
 !! html
 <p><iframe class="pdf-embed" width="10" height="1090" src="http://example.com/images/f/f0/File.pdf#page=1" style="max-width: 100%;"></iframe>
+</p>
+!! end
+
+!! test
+… has height=10
+!! wikitext
+<pdf height=10>File.pdf</pdf>
+!! html
+<p><iframe class="pdf-embed" width="800" height="10" src="http://example.com/images/f/f0/File.pdf#page=1" style="max-width: 100%;"></iframe>
 </p>
 !! end
