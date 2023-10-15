@@ -11,7 +11,9 @@
 	"embed_pdf_invalid_width": "The width $1 is invalid.",
 	"embed_pdf_no_permission": "The last editor of this page did not have the right to $1.",
 	"embed_pdf_blank_file": "The URL or file path given to embed a PDF is blank.",
-	"embed_pdf_invalid_file": "The URL or file path $1 does not exist.",
+	"embed_pdf_invalid_file": "The URL or file path ($1) does not exist.",
 	"embed_pdf_invalid_user": "Internal error: Invalid user.",
+	"embed_pdf_invalid_file_name": "The File name ($1) is not valid.",
+	"embed_pdf_invalid_internal_error": "There was an internal error.",
 	"right-embed_pdf": "Embed PDFs into pages"
 }
