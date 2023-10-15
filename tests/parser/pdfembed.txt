@@ -24,7 +24,7 @@ Element with garbage
 !! wikitext
 <pdf><>#!*/</pdf>
 !! html
-<p><span class="error">The File name (&amp;lt;&amp;gt;#!*/) is not valid.</span>
+<p><span class="error">The File name (&lt;&gt;#!*/) is not valid.</span>
 </p>
 !! end
 

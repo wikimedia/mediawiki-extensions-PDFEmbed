@@ -82,7 +82,7 @@ class PDFEmbed {
 	 * @return array
 	 */
 	private static function getHostList( string $type ): array {
-		/** @var array {
+		/** @var ?array {
 		 *     white: string[],
 		 *     black: string[]
 		 * }
@@ -90,6 +90,9 @@ class PDFEmbed {
 		global $wgPDF;
 
 		$ret = [];
+		if ( !is_array( $wgPDF ) ) {
+			return $ret;
+		}
 		/**
 		 * We're checking user input here.
 		 *
