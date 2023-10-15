@@ -29,80 +29,21 @@ class PDFEmbed {
 	}
 
 	/**
-	 * disable the cache
+	 * Determines if the user is allowed to embed PDFs
+	 * Throws an exception that will be put in the wikitext if there is an error.
 	 *
-	 * @param Parser $parser
+	 * @return true
 	 */
-	public static function disableCache( Parser $parser ) {
-		// see https://gerrit.wikimedia.org/r/plugins/gitiles/mediawiki/extensions/MagicNoCache/+/refs/heads/master/src/MagicNoCacheHooks.php
-		global $wgOut;
-		$parser->getOutput()->updateCacheExpiry( 0 );
-
-		if ( method_exists( $wgOut, 'disableClientCache' ) ) {
-			$wgOut->disableClientCache();
-		} else {
-			$wgOut->enableClientCache( false );
-		}
-	}
-
-	/**
-	 * remove the File: prefix depending on the language or in english default form
-	 *
-	 * @param string $filename - the filename for which to fix the prefix
-	 * @return string - the filename without the File: / Media: or i18n File/Media prefix
-	 */
-	public static function removeFilePrefix( $filename ) {
-		$mwServices = MediaWikiServices::getInstance();
-
-		if ( method_exists( $mwServices, "getContentLanguage" ) ) {
-			$contentLang = $mwServices->getContentLanguage();
-
-			# there are four possible prefixes: 'File' and 'Media' in English and in the wiki's language
-			$ns_media_lang = $contentLang->getFormattedNsText( NS_MEDIA );
-			$ns_file_lang  = $contentLang->getFormattedNsText( NS_FILE );
-
-			if ( method_exists( $mwServices, "getLanguageFactory" ) ) {
-				$langFactory = $mwServices->getLanguageFactory();
-				$lang = $langFactory->getLanguage( 'en' );
-				$ns_media_lang_en = $lang->getFormattedNsText( NS_MEDIA );
-				$ns_file_lang_en  = $lang->getFormattedNsText( NS_FILE );
-				$filename = preg_replace(
-					"/^($ns_media_lang|$ns_file_lang|$ns_media_lang_en|$ns_file_lang_en):/",
-					'', $filename
-				);
-			} else {
-				$filename = preg_replace( "/^($ns_media_lang|$ns_file_lang):/", '', $filename );
-			}
-		}
-		return $filename;
-	}
-
-	/**
-	 * Generates the PDF object tag.
-	 *
-	 * @param string $obj Namespace prefixed article of the PDF file to display.
-	 * @param array $args Arguments on the tag.
-	 * @param Parser $parser
-	 * @param PPFrame $frame
-	 * @return string HTML
-	 */
-	public static function generateTag( $obj, $args, Parser $parser, PPFrame $frame ): string {
-		global $wgPdfEmbed, $wgRequest, $wgPDF;
-
-		// disable the cache
-		self::disableCache( $parser );
-
-		// grab the uri by parsing to html
-		$html = $parser->recursiveTagParse( $obj, $frame );
-
+	private static function handleUser( Parser $parser ): bool {
+		$ctx = RequestContext::getMain();
 		// check the action which triggered us
-		$requestAction = $wgRequest->getVal( 'action' );
+		$requestAction = $ctx->getRequest()->getVal( 'action' );
 
 		if ( $requestAction === null ) {
-			// https://www.mediawiki.org/wiki/Manual:UserFactory.php
+			// https://www.mediawiki.org/wiki/Manual:UseprFactory.php
 			$revUserName = $parser->getRevisionUser();
-			if ( empty( $revUserName ) ) {
-				return self::error( 'embed_pdf_invalid_user' );
+			if ( $revUserName === null ) {
+				throw new Exception( wfMessage( 'embed_pdf_invalid_user' ) );
 			}
 
 			$userFactory = MediaWikiServices::getInstance()->getUserFactory();
@@ -111,126 +52,167 @@ class PDFEmbed {
 
 		// depending on the action get the responsible user
 		if ( $requestAction === 'edit' || $requestAction === 'submit' ) {
-			$user = RequestContext::getMain()->getUser();
+			$user = $ctx->getUser();
 		}
 
+		$permManager = MediaWikiServices::getInstance()->getPermissionManager();
 		if ( !( $user instanceof UserIdentity &&
-			  MediaWikiServices::getInstance()->getPermissionManager()->userHasRight( $user, 'embed_pdf' )
+				$permManager->userHasRight( $user, 'embed_pdf' )
 		) ) {
 			$parser->addTrackingCategory( "pdfembed-permission-problem-category" );
-			return self::error( 'embed_pdf_no_permission', wfMessage( 'right-embed_pdf' ) );
+
+			throw new Exception(
+				wfMessage( 'embed_pdf_no_permission', wfMessage( 'right-embed_pdf' ) )
+			);
 		}
 
-		// we don't want the html but just the href of the link
-		// so we might reverse some of the parsing again by examining the html
-		// whether it contains an anchor <a href= ...
-		if ( strpos( $html, '<a' ) !== false ) {
-			$anchor = new SimpleXMLElement( $html );
-			// is there a href element?
-			if ( isset( $anchor['href'] ) ) {
-				// that's what we want ...
-				$html = $anchor['href'];
+		return true;
+	}
+
+	/**
+	 * Attempt to parse the body of a pdf tag as a url.  Check against deny
+	 * (and allow) lists and throws an error if the host does (not) match.
+	 *
+	 * @param string $url to check
+	 * @return array (empty if $url is not a url with a hostname in it)
+	 */
+	private static function maybeURL( string $url ): array {
+		global $wgPDF;
+
+		// parse the given url
+		$parsed = parse_url( $url );
+		if ( $parsed === false || !isset( $parsed['host'] ) ) {
+			return [];
+		}
+		$host = strtolower( $parsed['host'] );
+		$page = intval( $parsed['fragment'] ?? 1 );
+
+		if ( isset( $wgPDF ) ) {
+			$deny = array_flip( array_map( 'strtolower', $wgPDF['black'] ?? [] ) );
+			$allow = array_flip( array_map( 'strtolower', $wgPDF['white'] ?? [] ) );
+
+			if ( !isset( $allow[ $host ] ) && count( $allow ) > 0 ) {
+				throw new Exception( wfMessage( "embed_pdf_domain_not_white", $host ) );
+			}
+
+			if ( isset( $deny[ $host ] ) ) {
+				throw new Exception( wfMessage( "embed_pdf_domain_black", $host ) );
 			}
 		}
 
-		if ( array_key_exists( 'width', $args ) ) {
-			$widthStr = $parser->recursiveTagParse( $args['width'], $frame );
-		} else {
-			$widthStr = $wgPdfEmbed['width'];
+		return [ $url, $page ];
+	}
+
+	/**
+	 * Handle's parsing of the tag body that points to an uploaded file
+	 *
+	 * @param string $name of upload
+	 * @return array
+	 */
+	private static function handleName( string $name ): array {
+		$page = 1;
+		$title = Title::newfromText( $name, NS_FILE );
+		if ( $title === null || $title->getNamespace() !== NS_FILE ) {
+			throw new Exception(
+				wfMessage( 'embed_pdf_invalid_file_name', $name )
+			);
 		}
 
-		if ( array_key_exists( 'height', $args ) ) {
-			$heightStr = $parser->recursiveTagParse( $args['height'], $frame );
-		} else {
-			$heightStr = $wgPdfEmbed['height'];
+		if ( !$title->exists() ) {
+			throw new Exception(
+				wfMessage( 'embed_pdf_invalid_file', $title->getDBkey() )
+			);
 		}
 
-		if ( array_key_exists( 'page', $args ) ) {
-			$page = intval( $parser->recursiveTagParse( $args['page'], $frame ) );
-		} else {
-			$page = 1;
+		if ( $title->getFragment() ) {
+			$page = intval( $title->getFragment() );
 		}
 
-		if ( !preg_match( '~^\d+~', $widthStr ) ) {
-			return self::error( "embed_pdf_invalid_width", $widthStr );
-		} elseif ( !preg_match( '~^\d+~', $heightStr ) ) {
-			return self::error( "embed_pdf_invalid_height", $heightStr );
+		$repo = MediaWikiServices::getInstance()->getRepoGroup()->getLocalRepo();
+		$file = $repo->newFile( $title->getDBkey() );
+		if ( $file === null ) {
+			throw new Exception( wfMessage( 'embed_pdf_internal_error' ) );
+		}
+		$url = $file->getUrl();
+
+		return [ $url, $page ];
+	}
+
+	/**
+	 * Parse the arguments on the <pdf>
+	 *
+	 * @param array $args passed in
+	 * @return array
+	 */
+	private static function parseArgs( array $args ): array {
+		global $wgPdfEmbed;
+		$width = $wgPdfEmbed['width'] ?? null;
+		$height = $wgPdfEmbed['height'] ?? null;
+		$page = 0;
+		$iframe = $wgPdfEmbed['iframe'] ?? false;
+
+		if ( isset( $args['width'] ) ) {
+			$width = intval( $args['width'] );
 		}
 
-		$width = intVal( $widthStr );
-		$height = intVal( $heightStr );
-
-		if ( array_key_exists( 'iframe', $args ) ) {
-			$iframe = $parser->recursiveTagParse( $args['iframe'], $frame );
-		} else {
-			$iframe = $wgPdfEmbed['iframe'];
+		if ( isset( $args['height'] ) ) {
+			$height = intval( $args['height'] );
 		}
 
-		# if there are no slashes in the name we assume this
-		# might be a pointer to a file
-		if ( preg_match( '~^([^\/]+\.pdf)(#[0-9]+)?$~', $html, $matches ) ) {
-			# re contains the groups
-			$filename = $matches[1];
-			if ( count( $matches ) == 3 ) {
-				$page = $matches[2];
+		if ( isset( $args['iframe'] ) ) {
+			$useFrame = strtolower( $args['iframe'] );
+			$useFrameVal = abs( intval( $args['iframe'] ) );
+			$iframe = $useFrameVal > 0 || $useFrame === "yes" || $useFrame === "true";
+		}
+
+		if ( isset( $args['page'] ) ) {
+			$page = intval( $args['page'] );
+		}
+
+		return [ $height, $width, $page, $iframe ];
+	}
+
+	/**
+	 * Handle the body of the pdf tag by checking for a url and then, if that fails,
+	 * an uploaded file.
+	 *
+	 * @param string $body to check
+	 * @return array
+	 */
+	private static function handleBody( string $body ): array {
+		$parsed = self::maybeURL( $body );
+		if ( $parsed === [] ) {
+			$parsed = self::handleName( $body );
+		}
+		return $parsed;
+	}
+
+	/**
+	 * Generates the PDF object tag.
+	 *
+	 * @param string $body Body of tag
+	 * @param array $args Arguments on the tag.
+	 * @param Parser $parser
+	 * @return string HTML
+	 */
+	public static function generateTag( $body, $args, Parser $parser ): string {
+		[ $url, $width, $height, $page, $iframe ]
+			= [ null, null, null, 1, false ];
+		try {
+			self::handleUser( $parser );
+			$parsedBody = self::handleBody( $body );
+			$parsedArgs = self::parseArgs( $args );
+
+			[ $url, $page ] = $parsedBody;
+			[ $height, $width, $pageArg, $iframe ] = $parsedArgs;
+
+			if ( $pageArg > 1 ) {
+				$page = $pageArg;
 			}
-
-			$filename = self::removeFilePrefix( $filename );
-			$pdfFile = MediaWikiServices::getInstance()->getRepoGroup()->findFile( $filename );
-
-			if ( $pdfFile !== false ) {
-				$url = $pdfFile->getFullUrl();
-				return self::embed( $url, $width, $height, $page, $iframe );
-			} else {
-				return self::error( 'embed_pdf_invalid_file', $filename );
-			}
-		} else {
-			// parse the given url
-			$domain = parse_url( $html );
-
-			// check that the parsing worked and retrieve a valid host
-			// no relative urls are allowed ...
-			if ( $domain === false || ( !isset( $domain['host'] ) ) ) {
-				if ( !isset( $domain['host'] ) ) {
-					return self::error( "embed_pdf_invalid_relative_domain", $html );
-				}
-				return self::error( "embed_pdf_invalid_url", $html );
-			}
-
-			if ( isset( $wgPDF ) ) {
-
-				foreach ( $wgPDF['black'] as $x => $y ) {
-					$wgPDF['black'][$x] = strtolower( $y );
-				}
-				foreach ( $wgPDF['white'] as $x => $y ) {
-					$wgPDF['white'][$x] = strtolower( $y );
-				}
-
-				$host = strtolower( $domain['host'] );
-				$whitelisted = false;
-
-				if ( in_array( $host, $wgPDF['white'] ) ) {
-					$whitelisted = true;
-				}
-
-				if ( $wgPDF['white'] != [] && !$whitelisted ) {
-					return self::error( "embed_pdf_domain_not_white", $host );
-				}
-
-				if ( !$whitelisted ) {
-					if ( in_array( $host, $wgPDF['black'] ) ) {
-						return self::error( "embed_pdf_domain_black", $host );
-					}
-				}
-			}
-
-			# check that url is valid
-			if ( filter_var( $html, FILTER_VALIDATE_URL, FILTER_FLAG_PATH_REQUIRED ) ) {
-				return self::embed( $html, $width, $height, $page, $iframe );
-			} else {
-				return self::error( 'embed_pdf_invalid_url', $html );
-			}
+		} catch ( Exception $e ) {
+			return self::error( $e->getMessage() );
 		}
+		return self::embed( $url, $width, $height, $page, $iframe );
 	}
 
 	/**
@@ -245,14 +227,14 @@ class PDFEmbed {
 	 */
 	private static function embed( $url, $width, $height, $page, $iframe ) {
 		# secure and concatenate the url
-		$pdfSafeUrl = htmlentities( $url ) . '#page=' . $page;
+		$pdfUrl = "$url#page=$page";
 		# check the embed mode and return a proper HTML element
 		if ( $iframe ) {
-			return Html::rawElement( 'iframe', [
+			return Html::element( 'iframe', [
 				'class' => 'pdf-embed',
 				'width' => $width,
 				'height' => $height,
-				'src' => $pdfSafeUrl,
+				'src' => $pdfUrl,
 				'style' => 'max-width: 100%;'
 			] );
 		} else {
@@ -261,15 +243,15 @@ class PDFEmbed {
 				'class' => 'pdf-embed',
 				'width' => $width,
 				'height' => $height,
-				'data' => $pdfSafeUrl,
+				'data' => $pdfUrl,
 				'style' => 'max-width: 100%;',
 				'type' => 'application/pdf'
-			], Html::rawElement(
+			], Html::element(
 				'a',
 				[
-					'href' => $pdfSafeUrl
+					'href' => $pdfUrl
 				],
-				wfMessage( 'pdfembed-load-pdf' )
+				wfMessage( 'pdfembed-load-pdf' )->plain()
 			) );
 		}
 	}
@@ -277,11 +259,10 @@ class PDFEmbed {
 	/**
 	 * Returns a standard error message.
 	 *
-	 * @param string $messageKey Error message key to display.
-	 * @param array ...$params any parameters for the error message
+	 * @param string $error Error message to display.
 	 * @return string HTML error message.
 	 */
-	private static function error( $messageKey, ...$params ) {
-		return Xml::span( wfMessage( $messageKey, $params )->plain(), 'error' );
+	private static function error( $error ) {
+		return Xml::span( $error, 'error' );
 	}
 }
