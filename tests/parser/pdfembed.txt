@@ -1,0 +1,33 @@
+!! options
+version=2
+!! end
+!! hooks
+pdf
+!! endhooks
+
+!! test
+Empty element
+!! wikitext
+<pdf></pdf>
+!! html
+<p><span class="error">The File name () is not valid.</span>
+</p>
+!! end
+
+!! test
+… with garbage
+!! wikitext
+<pdf><>#!*/</pdf>
+!! html
+<p><span class="error">The File name (&amp;lt;&amp;gt;#!*/) is not valid.</span>
+</p>
+!! end
+
+!! test
+… with an URL
+!! wikitext
+<pdf>https://example.com</pdf>
+!! html
+<p><iframe class="pdf-embed" width="800" height="1090" src="https://example.com#page=1" style="max-width: 100%;"></iframe>
+</p>
+!! end

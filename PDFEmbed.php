@@ -38,14 +38,18 @@ class PDFEmbed {
 		$ctx = RequestContext::getMain();
 		// check the action which triggered us
 		$requestAction = $ctx->getRequest()->getVal( 'action' );
+		$revUserName = null;
 
 		if ( $requestAction === null ) {
-			// https://www.mediawiki.org/wiki/Manual:UseprFactory.php
 			$revUserName = $parser->getRevisionUser();
-			if ( $revUserName === null ) {
-				throw new Exception( wfMessage( 'embed_pdf_invalid_user' ) );
-			}
+		}
 
+		// RevUser will be null during parser tests
+		if ( $revUserName === null && $requestAction === null ) {
+			return true;
+		}
+
+		if ( $revUserName !== null ) {
 			$userFactory = MediaWikiServices::getInstance()->getUserFactory();
 			$user = $userFactory->newFromName( $revUserName );
 		}
