@@ -5,6 +5,12 @@ version=2
 pdf
 !! endhooks
 
+!! article
+File:File.pdf
+!! text
+Create a file
+!! endarticle
+
 !! test
 Empty element
 !! wikitext
@@ -29,5 +35,23 @@ Empty element
 <pdf>https://example.com</pdf>
 !! html
 <p><iframe class="pdf-embed" width="800" height="1090" src="https://example.com#page=1" style="max-width: 100%;"></iframe>
+</p>
+!! end
+
+!! test
+… with file
+!! wikitext
+<pdf>File.pdf</pdf>
+!! html
+<p><iframe class="pdf-embed" width="800" height="1090" src="http://example.com/images/f/f0/File.pdf#page=1" style="max-width: 100%;"></iframe>
+</p>
+!! end
+
+!! test
+… with non-existant file
+!! wikitext
+<pdf>No-Exist-File.pdf</pdf>
+!! html
+<p><span class="error">The URL or file path (No-Exist-File.pdf) does not exist.</span>
 </p>
 !! end
