@@ -34,7 +34,6 @@
 			"parallel-lint . --exclude vendor --exclude node_modules",
 			"minus-x check .",
 			"npm test",
-			"@phpcs",
 			"php \"$MW_INSTALL_PATH/tests/parser/parserTests.php\" --file tests/parser/pdfembed.txt"
 		],
 		"error-format-test": [
