@@ -1,0 +1,146 @@
+!! Version 2
+
+!! hooks
+pdf
+!! endhooks
+
+!! article
+File:File.pdf
+!! text
+Create a file
+!! endarticle
+
+!! test
+PDF element is empty
+!! wikitext
+<pdf></pdf>
+!! html
+<p><span class="error">The File name () is not valid.</span>
+</p>
+!! end
+
+!! test
+PDF element has garbage
+!! wikitext
+<pdf><>#!*/</pdf>
+!! html
+<p><span class="error">The File name (&lt;&gt;#!*/) is not valid.</span>
+</p>
+!! end
+
+!! test
+… a URL
+!! wikitext
+<pdf>https://example.net</pdf>
+!! html
+<p><iframe class="pdf-embed" width="800" height="1090" src="https://example.net#page=1" style="max-width: 100%;"></iframe>
+</p>
+!! end
+
+!! test
+… a file
+!! wikitext
+<pdf>File.pdf</pdf>
+!! html
+<p><iframe class="pdf-embed" width="800" height="1090" src="http://example.com/images/f/f0/File.pdf#page=1" style="max-width: 100%;"></iframe>
+</p>
+!! end
+
+!! test
+… a space before filename
+!! wikitext
+<pdf> File.pdf</pdf>
+!! html
+<p><iframe class="pdf-embed" width="800" height="1090" src="http://example.com/images/f/f0/File.pdf#page=1" style="max-width: 100%;"></iframe>
+</p>
+!! end
+
+!! test
+… a space after filename
+!! wikitext
+<pdf>File.pdf</pdf>
+!! html
+<p><iframe class="pdf-embed" width="800" height="1090" src="http://example.com/images/f/f0/File.pdf#page=1" style="max-width: 100%;"></iframe>
+</p>
+!! end
+
+!! test
+… a non-existant file
+!! wikitext
+<pdf>No-Exist-File.pdf</pdf>
+!! html
+<p><span class="error">The URL or file path (No-Exist-File.pdf) does not exist.</span>
+</p>
+!! end
+
+!! test
+… iframe=true
+!! wikitext
+<pdf iframe=true>File.pdf</pdf>
+!! html
+<p><iframe class="pdf-embed" width="800" height="1090" src="http://example.com/images/f/f0/File.pdf#page=1" style="max-width: 100%;"></iframe>
+</p>
+!! end
+
+!! test
+… iframe=false
+!! wikitext
+<pdf iframe=false>File.pdf</pdf>
+!! html
+<p><object class="pdf-embed" width="800" height="1090" data="http://example.com/images/f/f0/File.pdf#page=1" style="max-width: 100%;" type="application/pdf"><a href="http://example.com/images/f/f0/File.pdf#page=1">load PDF</a></object>
+</p>
+!! end
+
+!! test
+… iframe=
+!! wikitext
+<pdf iframe=>File.pdf</pdf>
+!! html
+<p><object class="pdf-embed" width="800" height="1090" data="http://example.com/images/f/f0/File.pdf#page=1" style="max-width: 100%;" type="application/pdf"><a href="http://example.com/images/f/f0/File.pdf#page=1">load PDF</a></object>
+</p>
+!! end
+
+!! test
+… iframe=no
+!! wikitext
+<pdf iframe=no>File.pdf</pdf>
+!! html
+<p><object class="pdf-embed" width="800" height="1090" data="http://example.com/images/f/f0/File.pdf#page=1" style="max-width: 100%;" type="application/pdf"><a href="http://example.com/images/f/f0/File.pdf#page=1">load PDF</a></object>
+</p>
+!! end
+
+!! test
+… iframe=yes
+!! wikitext
+<pdf iframe=yes>File.pdf</pdf>
+!! html
+<p><iframe class="pdf-embed" width="800" height="1090" src="http://example.com/images/f/f0/File.pdf#page=1" style="max-width: 100%;"></iframe>
+</p>
+!! end
+
+!! test
+… iframe=1
+!! wikitext
+<pdf iframe=1>File.pdf</pdf>
+!! html
+<p><iframe class="pdf-embed" width="800" height="1090" src="http://example.com/images/f/f0/File.pdf#page=1" style="max-width: 100%;"></iframe>
+</p>
+!! end
+
+!! test
+… width=10
+!! wikitext
+<pdf width=10>File.pdf</pdf>
+!! html
+<p><iframe class="pdf-embed" width="10" height="1090" src="http://example.com/images/f/f0/File.pdf#page=1" style="max-width: 100%;"></iframe>
+</p>
+!! end
+
+!! test
+… height=10
+!! wikitext
+<pdf height=10>File.pdf</pdf>
+!! html
+<p><iframe class="pdf-embed" width="800" height="10" src="http://example.com/images/f/f0/File.pdf#page=1" style="max-width: 100%;"></iframe>
+</p>
+!! end
