@@ -1,0 +1,19 @@
+{
+	"@metadata": {
+		"authors": []
+	},
+	"pdfembed": "Name of the extension: PDF Embed",
+	"pdfembed_description": "{{desc|name=PDFEmbed|url=https://www.mediawiki.org/wiki/Extension:PDFEmbed}}",
+	"pdfembed-permission-problem-category": "Tracking category",
+	"pdfembed-permission-problem-category-desc": "Tracking category description",
+	"pdfembed-load-pdf": "Message shown when loading pdf object",
+	"embed_pdf_invalid_height": "Error message.",
+	"embed_pdf_invalid_width": "Error message.",
+	"embed_pdf_no_permission": "Error message.",
+	"embed_pdf_blank_file": "Error message.",
+	"embed_pdf_invalid_file": "Error message.",
+	"embed_pdf_invalid_user": "Error message.",
+	"embed_pdf_invalid_file_name": "Error message.",
+	"embed_pdf_invalid_internal_error": "Error message.",
+	"right-embed_pdf": "{{doc-right|embed_pdf}}"
+}
