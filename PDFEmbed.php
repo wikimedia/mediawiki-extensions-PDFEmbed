@@ -85,7 +85,7 @@ class PDFEmbed {
 		}
 
 		// depending on the action get the responsible user
-		if ( $requestAction === 'edit' || $requestAction === 'submit' ) {
+		if ( $requestAction === 'edit' || $requestAction === 'submit' || $requestAction == 'visualeditor' ) {
 			$user = $ctx->getUser();
 		}
 
