@@ -92,7 +92,7 @@ class PDFEmbed {
 		) ) {
 			$parser->addTrackingCategory( "pdfembed-permission-problem-category" );
 
-			throw new Exception(
+			throw new RuntimeException(
 				wfMessage( 'embed_pdf_no_permission', wfMessage( 'right-embed_pdf' ) )->plain()
 			);
 		}
@@ -235,13 +235,13 @@ class PDFEmbed {
 		$page = intval( $parsed['fragment'] ?? 1 );
 
 		if ( self::isHostDenied( $host ) ) {
-			throw new Exception(
+			throw new RuntimeException(
 				wfMessage( "embed_pdf_domain_black", $host )->plain()
 			);
 		}
 
 		if ( !self::isHostAllowed( $host ) ) {
-			throw new Exception(
+			throw new RuntimeException(
 				wfMessage( "embed_pdf_domain_not_white", $host )->plain()
 			);
 		}
@@ -263,13 +263,13 @@ class PDFEmbed {
 		$page = 1;
 		$title = Title::newfromText( $name, NS_FILE );
 		if ( !$title || $title->getNamespace() !== NS_FILE ) {
-			throw new Exception(
+			throw new RuntimeException(
 				wfMessage( 'embed_pdf_invalid_file_name', $name )->plain()
 			);
 		}
 
 		if ( !$title->exists() ) {
-			throw new Exception(
+			throw new RuntimeException(
 				wfMessage( 'embed_pdf_invalid_file', $title->getDBkey() )->plain()
 			);
 		}
@@ -281,7 +281,7 @@ class PDFEmbed {
 		$repo = MediaWikiServices::getInstance()->getRepoGroup()->getLocalRepo();
 		$file = $repo->newFile( $title->getDBkey() );
 		if ( !$file ) {
-			throw new Exception( wfMessage( 'embed_pdf_internal_error' )->plain() );
+			throw new RuntimeException( wfMessage( 'embed_pdf_internal_error' )->plain() );
 		}
 		$url = $file->getUrl();
 
