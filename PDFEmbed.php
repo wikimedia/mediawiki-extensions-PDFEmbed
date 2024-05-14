@@ -23,12 +23,9 @@ class PDFEmbed {
 	 * Sets up this extensions parser functions.
 	 *
 	 * @param Parser $parser object passed as a reference.
-	 * @return bool true
 	 */
 	public static function onParserFirstCallInit( Parser $parser ) {
 		$parser->setHook( 'pdf', [ __CLASS__, 'generateTag' ] );
-
-		return true;
 	}
 
 	/**
@@ -110,11 +107,7 @@ class PDFEmbed {
 	 * @psalm-return list{ 0: string, 1: int }
 	 */
 	private static function handleBody( string $body ): array {
-		$parsed = self::maybeURL( $body );
-		if ( $parsed === null ) {
-			$parsed = self::handleName( $body );
-		}
-		return $parsed;
+		return self::maybeURL( $body ) ?? self::handleName( $body );
 	}
 
 	/**
@@ -162,9 +155,7 @@ class PDFEmbed {
 			$iframe = $useFrameVal > 0 || $useFrame === "yes" || $useFrame === "true";
 		}
 
-		if ( $iframe === null ) {
-			$iframe = false;
-		}
+		$iframe ??= false;
 
 		if ( !is_int( $page ) ) {
 			$page = intval( $page );
@@ -271,7 +262,7 @@ class PDFEmbed {
 	private static function handleName( string $name ): array {
 		$page = 1;
 		$title = Title::newfromText( $name, NS_FILE );
-		if ( $title === null || $title->getNamespace() !== NS_FILE ) {
+		if ( !$title || $title->getNamespace() !== NS_FILE ) {
 			throw new Exception(
 				wfMessage( 'embed_pdf_invalid_file_name', $name )->plain()
 			);
@@ -289,7 +280,7 @@ class PDFEmbed {
 
 		$repo = MediaWikiServices::getInstance()->getRepoGroup()->getLocalRepo();
 		$file = $repo->newFile( $title->getDBkey() );
-		if ( $file === null ) {
+		if ( !$file ) {
 			throw new Exception( wfMessage( 'embed_pdf_internal_error' )->plain() );
 		}
 		$url = $file->getUrl();
@@ -326,10 +317,7 @@ class PDFEmbed {
 		if ( is_array( $wgPDF[$type] ) ) {
 			$ret = $wgPDF[$type];
 		}
-		if ( count( $ret ) > 0 ) {
-			$ret = array_flip( array_map( 'strtolower', $ret ) );
-		}
-		return $ret;
+		return array_flip( array_map( 'strtolower', $ret ) );
 	}
 
 	/**
@@ -340,12 +328,7 @@ class PDFEmbed {
 	 */
 	private static function isHostDenied( string $host ): bool {
 		$deny = self::getHostList( "black" );
-
-		if ( isset( $deny[ $host ] ) ) {
-			return true;
-		}
-
-		return false;
+		return isset( $deny[$host] );
 	}
 
 	/**
@@ -356,11 +339,6 @@ class PDFEmbed {
 	 */
 	private static function isHostAllowed( string $host ): bool {
 		$allow = self::getHostList( "white" );
-
-		if ( !isset( $allow[ $host ] ) && count( $allow ) > 0 ) {
-			return false;
-		}
-
-		return true;
+		return !$allow || isset( $allow[$host] );
 	}
 }
