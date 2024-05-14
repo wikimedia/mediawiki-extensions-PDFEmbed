@@ -11,6 +11,7 @@
  *
  */
 
+use MediaWiki\Html\Html;
 use MediaWiki\MediaWikiServices;
 use MediaWiki\User\UserIdentity;
 
@@ -214,7 +215,7 @@ class PDFEmbed {
 	 * @return string HTML error message.
 	 */
 	private static function error( string $error ): string {
-		return Xml::span( $error, 'error' );
+		return Html::element( 'span', [ 'class' => 'error' ], $error );
 	}
 
 	/**
