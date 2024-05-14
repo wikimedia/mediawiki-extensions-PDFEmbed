@@ -8,7 +8,6 @@
  * @license		LGPL-3.0-only
  * @package		PDFEmbed
  * @link		https://www.mediawiki.org/wiki/Extension:PDFEmbed
- *
  */
 
 use MediaWiki\Html\Html;
@@ -125,21 +124,21 @@ class PDFEmbed {
 	 * @psalm-return list{ int|null, int|null, int, bool }
 	 */
 	private static function parseArgs( array $arg ): array {
-		/** @var array {
+		/** @var array{
 		 *     width: int,
 		 *     height: int,
 		 *     page: int,
 		 *     iframe: mixed
-		 * }
+		 * } $wgPdfEmbed
 		 */
 		global $wgPdfEmbed;
-		/** @var string|null */
+		/** @var string|null $width */
 		$width = $arg['width'] ?? $wgPdfEmbed['width'] ?? null;
-		/** @var string|null */
+		/** @var string|null $height */
 		$height = $arg['height'] ?? $wgPdfEmbed['height'] ?? null;
-		/** @var string|int|null */
+		/** @var string|int|null $page */
 		$page = $arg['page'] ?? $wgPdfEmbed['page'] ?? 1;
-		/** @var string|null */
+		/** @var string|null $iframe */
 		$iframe = $arg['iframe'] ?? $wgPdfEmbed['iframe'] ?? null;
 
 		if ( $width !== null ) {
@@ -296,13 +295,13 @@ class PDFEmbed {
 	 * Retrieve a host list from the configuration.
 	 *
 	 * @param string $type of list to get
-	 * @return array
+	 * @return array<string,int> Flipped set with meaningless values
 	 */
 	private static function getHostList( string $type ): array {
-		/** @var ?array {
+		/** @var ?array{
 		 *     white: string[],
 		 *     black: string[]
-		 * }
+		 * } $wgPDF
 		 */
 		global $wgPDF;
 
