@@ -12,6 +12,7 @@
 
 use MediaWiki\Html\Html;
 use MediaWiki\MediaWikiServices;
+use MediaWiki\Title\Title;
 use MediaWiki\User\UserIdentity;
 
 /**
@@ -261,7 +262,7 @@ class PDFEmbed {
 	 */
 	private static function handleName( string $name ): array {
 		$page = 1;
-		$title = Title::newfromText( $name, NS_FILE );
+		$title = Title::newFromText( $name, NS_FILE );
 		if ( !$title || $title->getNamespace() !== NS_FILE ) {
 			throw new RuntimeException(
 				wfMessage( 'embed_pdf_invalid_file_name', $name )->plain()
