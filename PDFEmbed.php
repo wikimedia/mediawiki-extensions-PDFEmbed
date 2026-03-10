@@ -1,5 +1,7 @@
 <?php
 
+// @phan-file-suppress PhanUnextractableAnnotationSuffix,PhanCommentDuplicateParam
+
 /**
  * PDFEmbed
  * PDFEmbed Hooks
