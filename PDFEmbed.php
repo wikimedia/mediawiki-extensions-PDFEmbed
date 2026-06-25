@@ -12,6 +12,7 @@
  * @link		https://www.mediawiki.org/wiki/Extension:PDFEmbed
  */
 
+use MediaWiki\Context\RequestContext;
 use MediaWiki\Html\Html;
 use MediaWiki\MediaWikiServices;
 use MediaWiki\Title\Title;
@@ -24,11 +25,9 @@ class PDFEmbed {
 
 	/**
 	 * Sets up this extensions parser functions.
-	 *
-	 * @param Parser $parser object passed as a reference.
 	 */
 	public static function onParserFirstCallInit( Parser $parser ) {
-		$parser->setHook( 'pdf', [ __CLASS__, 'generateTag' ] );
+		$parser->setHook( 'pdf', self::generateTag( ... ) );
 	}
 
 	/**
@@ -42,11 +41,9 @@ class PDFEmbed {
 	public static function generateTag( $body, $args, Parser $parser ): string {
 		try {
 			self::handleUser( $parser );
-			$parsedBody = self::handleBody( $body );
-			$parsedArgs = self::parseArgs( $args );
 
-			[ $url, $page ] = $parsedBody;
-			[ $height, $width, $pageArg, $iframe ] = $parsedArgs;
+			[ $url, $page ] = self::handleBody( $body );
+			[ $height, $width, $pageArg, $iframe ] = self::parseArgs( $args );
 
 			if ( $pageArg > 1 ) {
 				$page = $pageArg;
@@ -66,7 +63,7 @@ class PDFEmbed {
 	private static function handleUser( Parser $parser ): void {
 		$ctx = RequestContext::getMain();
 		// check the action which triggered us
-		$requestAction = $ctx->getRequest()->getVal( 'action' );
+		$requestAction = $ctx->getRequest()->getRawVal( 'action' );
 		$revUserName = null;
 		$user = null;
 
@@ -154,17 +151,10 @@ class PDFEmbed {
 
 		if ( $iframe !== null ) {
 			$useFrame = strtolower( $iframe );
-			$useFrameVal = abs( intval( $iframe ) );
-			$iframe = $useFrameVal > 0 || $useFrame === "yes" || $useFrame === "true";
+			$iframe = (int)$iframe || $useFrame === 'yes' || $useFrame === 'true';
 		}
 
-		$iframe ??= false;
-
-		if ( !is_int( $page ) ) {
-			$page = intval( $page );
-		}
-
-		return [ $height, $width, $page, $iframe ];
+		return [ $height, $width, (int)$page, $iframe ?? false ];
 	}
 
 	/**
@@ -249,10 +239,7 @@ class PDFEmbed {
 			);
 		}
 
-		if ( $page === 0 ) {
-			$page = 1;
-		}
-		return [ $url, $page ];
+		return [ $url, $page ?: 1 ];
 	}
 
 	/**
@@ -265,7 +252,7 @@ class PDFEmbed {
 	private static function handleName( string $name ): array {
 		$page = 1;
 		$title = Title::newFromText( $name, NS_FILE );
-		if ( !$title || $title->getNamespace() !== NS_FILE ) {
+		if ( !$title || !$title->inNamespace( NS_FILE ) ) {
 			throw new RuntimeException(
 				wfMessage( 'embed_pdf_invalid_file_name', $name )->plain()
 			);
@@ -288,10 +275,7 @@ class PDFEmbed {
 		}
 		$url = $file->getUrl();
 
-		if ( $page === 0 ) {
-			$page = 1;
-		}
-		return [ $url, $page ];
+		return [ $url, $page ?: 1 ];
 	}
 
 	/**
